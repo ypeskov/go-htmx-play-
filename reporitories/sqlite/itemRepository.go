@@ -23,7 +23,7 @@ func New(log *logger.Logger, db *database.Database) ItemRepositoryInterface {
 }
 
 func (r *ItemRepository) GetItems() ([]models.TodoItem, error) {
-	query := "SELECT * FROM todos"
+	query := "SELECT id, item, IFNULL(NULLIF(done, ''), 'false') AS done FROM todos"
 	var items []models.TodoItem
 	err := r.db.Select(&items, query)
 	if err != nil {

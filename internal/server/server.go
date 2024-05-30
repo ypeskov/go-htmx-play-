@@ -36,9 +36,9 @@ func New(cfg *config.Config,
 		return c.String(200, "OK")
 	})
 
-	e.GET("/", showIndexPage)
-
 	handlers := routes.New(log, db)
+
+	e.GET("/", handlers.ShowIndexPage)
 
 	itemsGroup := e.Group("/items")
 	handlers.RegisterItemsRoutes(itemsGroup)
@@ -55,12 +55,4 @@ func (s *Server) Start() error {
 	s.log.Infof("Starting the server on port %s", s.port)
 
 	return s.e.Start(s.port)
-}
-
-func showIndexPage(c echo.Context) error {
-	t := template.Must(template.ParseFiles(
-		"templates/layouts/base.html",
-		"templates/index.html",
-	))
-	return t.ExecuteTemplate(c.Response(), "index", nil)
 }

@@ -2,9 +2,15 @@
 {{ template "base" . }}
 {{ end }}
 
-{{ define "title" }}Index Page{{ end }}
+{{ define "title" }}
+Index Page
+{{ end }}
 
 {{ define "content" }}
-<p>This is the main content of the index page.</p>
+
+{{ range . }}
+    {{ .Item }} - {{ .Done }}
+{{ end }}
+
 {{ end }}
 
