@@ -6,6 +6,8 @@ import (
 	"Tpl/internal/logger"
 	"Tpl/internal/routes"
 	"github.com/labstack/echo/v4"
+	"html/template"
+	"io"
 )
 
 type Server struct {
@@ -14,16 +16,27 @@ type Server struct {
 	log  *logger.Logger
 }
 
+type TemplateRenderer struct {
+	templates *template.Template
+}
+
+func (t *TemplateRenderer) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	return t.templates.ExecuteTemplate(w, name, data)
+}
+
 func New(cfg *config.Config,
 	log *logger.Logger,
 	db *database.Database) *Server {
+
 	e := echo.New()
 
-	e.HideBanner = true
+	e.Static("/static", "static")
 
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(200, "OK")
 	})
+
+	e.GET("/", showIndexPage)
 
 	handlers := routes.New(log, db)
 
@@ -42,4 +55,12 @@ func (s *Server) Start() error {
 	s.log.Infof("Starting the server on port %s", s.port)
 
 	return s.e.Start(s.port)
+}
+
+func showIndexPage(c echo.Context) error {
+	t := template.Must(template.ParseFiles(
+		"templates/layouts/base.html",
+		"templates/index.html",
+	))
+	return t.ExecuteTemplate(c.Response(), "index", nil)
 }
