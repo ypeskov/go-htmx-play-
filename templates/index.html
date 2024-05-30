@@ -8,9 +8,22 @@ Index Page
 
 {{ define "content" }}
 
-{{ range . }}
-    {{ .Item }} - {{ .Done }}
-{{ end }}
+<div class="container flex flex-col items-center">
+
+  <form hx-post="/items/add" hx-target="#todos" hx-swap="innerHTML" id="add-todo" class="flex flex-col items-center">
+    <input type="text"
+           name="item"
+           placeholder="Enter your todo item"
+           class="rounded-lg p-2 m-2 border-2">
+    <button type="submit"  class="rounded-lg p-2 m-2 bg-green-500 text-white">Add</button>
+  </form>
+
+  <div id="todos" class="flex flex-col">
+    {{ block "items" . }}
+    {{ end }}
+  </div>
+</div>
+
 
 {{ end }}
 

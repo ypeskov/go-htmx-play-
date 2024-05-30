@@ -13,6 +13,8 @@ type ItemRepository struct {
 
 type ItemRepositoryInterface interface {
 	GetItems() ([]models.TodoItem, error)
+	AddItem(item models.TodoItem) error
+	DeleteItem(id int64) error
 }
 
 func New(log *logger.Logger, db *database.Database) ItemRepositoryInterface {
@@ -27,9 +29,31 @@ func (r *ItemRepository) GetItems() ([]models.TodoItem, error) {
 	var items []models.TodoItem
 	err := r.db.Select(&items, query)
 	if err != nil {
-		r.log.Errorf("REPO: Failed to execute query: %v", err)
+		r.log.Errorf("REPO: Failed to execute query: %v\n", err)
 		return nil, err
 	}
 
 	return items, nil
+}
+
+func (r *ItemRepository) AddItem(item models.TodoItem) error {
+	query := "INSERT INTO todos (item, done) VALUES (?, ?)"
+	_, err := r.db.Exec(query, item.Item, item.Done)
+	if err != nil {
+		r.log.Errorf("REPO: Failed to execute query: %v\n", err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *ItemRepository) DeleteItem(id int64) error {
+	query := "DELETE FROM todos WHERE id = ?"
+	_, err := r.db.Exec(query, id)
+	if err != nil {
+		r.log.Errorf("REPO: Failed to execute query: %+v\n", err)
+		return err
+	}
+
+	return nil
 }
