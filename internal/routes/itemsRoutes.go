@@ -23,7 +23,7 @@ func (r *Routes) RegisterItemsRoutes(g *echo.Group) {
 }
 
 func (r *Routes) GetItems(c echo.Context) error {
-	r.log.Info("Getting items from the database")
+	//r.log.Info("Getting items from the database")
 
 	items, err := r.itemsService.GetItems()
 	if err != nil {
