@@ -9,6 +9,12 @@ import (
 	"strconv"
 )
 
+type TodoItemView struct {
+	Id   int
+	Item string
+	Done bool
+}
+
 func (r *Routes) RegisterItemsRoutes(g *echo.Group) {
 	g.GET("/all", r.GetItems)
 	g.POST("/add", r.AddItem)
@@ -54,10 +60,11 @@ func (r *Routes) AddItem(c echo.Context) error {
 	}
 
 	vars := make(jet.VarMap)
-	vars.Set("items", items)
+	convertedItems := convertItemsToView(items)
+	vars.Set("items", convertedItems)
 
 	var buf bytes.Buffer
-	if err := t.Execute(&buf, vars, items); err != nil {
+	if err := t.Execute(&buf, vars, convertedItems); err != nil {
 		r.log.Errorf("Failed to execute template: %v", err)
 		return c.JSON(http.StatusInternalServerError, "Failed to execute template")
 	}
@@ -98,7 +105,7 @@ func (r *Routes) ShowIndexPage(c echo.Context) error {
 	}
 
 	data := make(jet.VarMap)
-	data.Set("items", items)
+	data.Set("items", convertItemsToView(items))
 
 	var buf bytes.Buffer
 	if err := t.Execute(&buf, data, nil); err != nil {
@@ -107,4 +114,16 @@ func (r *Routes) ShowIndexPage(c echo.Context) error {
 	}
 
 	return c.HTMLBlob(http.StatusOK, buf.Bytes())
+}
+
+func convertItemsToView(items []models.TodoItem) []TodoItemView {
+	var itemsView []TodoItemView
+	for _, item := range items {
+		itemsView = append(itemsView, TodoItemView{
+			Id:   item.Id,
+			Item: item.Item,
+			Done: *item.Done,
+		})
+	}
+	return itemsView
 }
