@@ -17,6 +17,7 @@ type ItemServiceInterface interface {
 	GetItems() ([]models.TodoItem, error)
 	AddItem(item models.TodoItem) error
 	DeleteItem(id int64) error
+	ChangeItemStatus(id int64, newStatus bool) error
 }
 
 func NewItemsService(logger *logger.Logger,
@@ -44,4 +45,8 @@ func (s *ItemService) AddItem(item models.TodoItem) error {
 
 func (s *ItemService) DeleteItem(id int64) error {
 	return s.itemRepo.DeleteItem(id)
+}
+
+func (s *ItemService) ChangeItemStatus(id int64, newStatus bool) error {
+	return s.itemRepo.ChangeItemStatus(id, newStatus)
 }

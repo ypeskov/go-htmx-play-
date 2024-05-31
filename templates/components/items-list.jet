@@ -3,7 +3,8 @@
     <div class="p-4">{{ item.Item }}</div>
     <div class="flex">
       <div class="p-4">
-        <input type="checkbox" {{ if item.Done }}checked{{ else }}{{ end }}>
+        <input hx-put="/items/change-status/{{ item.Id }}?newStatus={{ not item.Done }}"
+               type="checkbox" {{ if item.Done }}checked="true"{{ else }}{{ end }}>
       </div>
       <div class="p-4">
         <button hx-delete="/items/delete/{{ item.Id }}"

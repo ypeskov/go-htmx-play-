@@ -15,6 +15,7 @@ type ItemRepositoryInterface interface {
 	GetItems() ([]models.TodoItem, error)
 	AddItem(item models.TodoItem) error
 	DeleteItem(id int64) error
+	ChangeItemStatus(id int64, newStatus bool) error
 }
 
 func New(log *logger.Logger, db *database.Database) ItemRepositoryInterface {
@@ -54,6 +55,20 @@ func (r *ItemRepository) DeleteItem(id int64) error {
 		r.log.Errorf("REPO: Failed to execute query: %+v\n", err)
 		return err
 	}
+
+	return nil
+}
+
+func (r *ItemRepository) ChangeItemStatus(id int64, newStatus bool) error {
+	r.log.Infof("REPO: Changing status of item with id: %d to: %t\n", id, newStatus)
+	query := "UPDATE todos SET done = ? WHERE id = ?"
+	result, err := r.db.Exec(query, newStatus, id)
+	if err != nil {
+		r.log.Errorf("REPO: Failed to execute query: %+v\n", err)
+		return err
+	}
+	rowsQty, _ := result.RowsAffected()
+	r.log.Infof("REPO: Rows affected: %d\n", rowsQty)
 
 	return nil
 }
