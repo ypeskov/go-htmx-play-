@@ -35,6 +35,10 @@ func (s *ItemService) GetItems() ([]models.TodoItem, error) {
 }
 
 func (s *ItemService) AddItem(item models.TodoItem) error {
+	if item.Done == nil {
+		item.Done = new(bool) // set to false default
+	}
+
 	return s.itemRepo.AddItem(item)
 }
 

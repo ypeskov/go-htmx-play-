@@ -1,16 +1,15 @@
-{{ define "index" }}
-{{ template "base" . }}
-{{ end }}
+{{ extends "layouts/base.jet" }}
 
-{{ define "title" }}
-Index Page
-{{ end }}
 
-{{ define "content" }}
+{{ block body() }}
 
 <div class="container flex flex-col items-center">
 
-  <form hx-post="/items/add" hx-target="#todos" hx-swap="innerHTML" id="add-todo" class="flex flex-col items-center">
+  <form hx-post="/items/add"
+        hx-target="#todos"
+        hx-swap="innerHTML"
+        id="add-todo"
+        class="flex flex-col items-center">
     <input type="text"
            name="item"
            placeholder="Enter your todo item"
@@ -19,11 +18,8 @@ Index Page
   </form>
 
   <div id="todos" class="flex flex-col">
-    {{ block "items" . }}
-    {{ end }}
+    {{ include "components/items-list.jet" items }}
   </div>
 </div>
 
-
 {{ end }}
-

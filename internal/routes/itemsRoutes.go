@@ -2,8 +2,9 @@ package routes
 
 import (
 	"Tpl/models"
+	"bytes"
+	"github.com/CloudyKit/jet"
 	"github.com/labstack/echo/v4"
-	"html/template"
 	"net/http"
 	"strconv"
 )
@@ -34,7 +35,6 @@ func (r *Routes) AddItem(c echo.Context) error {
 		r.log.Errorf("Failed to bind item: %v", err)
 		return c.JSON(http.StatusBadRequest, "Failed to bind item")
 	}
-	r.log.Infof("Item: %+v", item)
 
 	if err := r.itemsService.AddItem(item); err != nil {
 		r.log.Errorf("Failed to add item to the database: %v", err)
@@ -42,24 +42,27 @@ func (r *Routes) AddItem(c echo.Context) error {
 	}
 
 	items, err := r.itemsService.GetItems()
-	r.log.Infof("Items: %+v", items)
 	if err != nil {
 		r.log.Errorf("Failed to get items from the database: %v", err)
 		return c.JSON(500, "Failed to get items from the database")
 	}
 
-	t, err := template.ParseFiles("templates/components/items-list.html")
+	t, err := r.View.GetTemplate("components/items-list.jet")
 	if err != nil {
 		r.log.Errorf("Failed to parse template: %v", err)
 		return c.JSON(http.StatusInternalServerError, "Failed to parse template")
 	}
 
-	if err := t.ExecuteTemplate(c.Response(), "items", items); err != nil {
+	vars := make(jet.VarMap)
+	vars.Set("items", items)
+
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, vars, items); err != nil {
 		r.log.Errorf("Failed to execute template: %v", err)
 		return c.JSON(http.StatusInternalServerError, "Failed to execute template")
 	}
 
-	return nil
+	return c.HTMLBlob(http.StatusOK, buf.Bytes())
 }
 
 func (r *Routes) DeleteItem(c echo.Context) error {
@@ -81,23 +84,27 @@ func (r *Routes) DeleteItem(c echo.Context) error {
 }
 
 func (r *Routes) ShowIndexPage(c echo.Context) error {
-	t := template.Must(template.ParseFiles(
-		"templates/layouts/base.html",
-		"templates/index.html",
-		"templates/components/items-list.html",
-	))
+	t, err := r.View.GetTemplate("index.jet")
+	if err != nil {
+		r.log.Errorf("Failed to get template: %v", err)
+		return c.JSON(http.StatusInternalServerError, "Failed to get template")
+	}
+	r.View.SetDevelopmentMode(true)
 
 	items, err := r.itemsService.GetItems()
 	if err != nil {
 		r.log.Errorf("Failed to get items from the database: %v", err)
 		return c.JSON(500, "Failed to get items from the database")
 	}
-	r.log.Info("Items: %+v", items)
 
-	if err := t.ExecuteTemplate(c.Response(), "index", items); err != nil {
+	data := make(jet.VarMap)
+	data.Set("items", items)
+
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, data, nil); err != nil {
 		r.log.Errorf("Failed to render index page: %v", err)
 		return c.JSON(500, "Failed to render index page")
 	}
 
-	return nil
+	return c.HTMLBlob(http.StatusOK, buf.Bytes())
 }
