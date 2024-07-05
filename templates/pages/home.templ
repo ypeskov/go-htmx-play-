@@ -1,0 +1,51 @@
+package pages
+
+import (
+		"fmt"
+		"strconv"
+    "Tpl/templates/layout"
+    "Tpl/models"
+)
+
+templ Home(title string, cmp templ.Component) {
+    @layout.Base(title) {
+    	<div class="container flex flex-col items-center">
+	    	<form hx-post="/items/add"
+                    hx-target="#todos"
+                    hx-swap="innerHTML"
+                    id="add-todo"
+                    class="flex flex-col items-center">
+						<input type="text"
+										 name="item"
+										 placeholder="Enter your todo item"
+										 class="rounded-lg p-2 m-2 border-2">
+						<button type="submit"  class="rounded-lg p-2 m-2 bg-green-500 text-white">Add</button>
+          </form>
+
+        	@cmp
+			</div>
+    }
+}
+
+templ ItemsList(items []models.TodoItem) {
+	<div id="todos" class="flex flex-col">
+		for _, item := range items {
+			<div id={ fmt.Sprintf("item-%d", item.Id) } class="container flex flex-row justify-between">
+				<div  class="p-4">{ item.Item }</div>
+				<div class="flex">
+					<div class="p-4">
+						<input hx-put={fmt.Sprintf("/items/change-status/%d?newStatus=%v", item.Id, strconv.FormatBool(!*item.Done))}
+									 type="checkbox" if *item.Done == true { checked="true" }>
+					</div>
+					<div class="p-4">
+						<button hx-delete={ fmt.Sprintf("/items/delete/%d", item.Id) }
+										hx-target={ fmt.Sprintf("#item-%d", item.Id) }
+										hx-swap="outerHTML"
+										class="rounded-lg p-2 m-2 bg-red-500 text-white">Delete</button>
+					</div>
+				</div>
+			</div>
+		}
+  </div>
+}
+

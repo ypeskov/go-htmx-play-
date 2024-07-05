@@ -2,8 +2,7 @@ package routes
 
 import (
 	"Tpl/models"
-	"bytes"
-	"github.com/CloudyKit/jet"
+	"Tpl/templates/pages"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
@@ -16,22 +15,9 @@ type TodoItemView struct {
 }
 
 func (r *Routes) RegisterItemsRoutes(g *echo.Group) {
-	g.GET("/all", r.GetItems)
 	g.POST("/add", r.AddItem)
 	g.DELETE("/delete/:id", r.DeleteItem)
 	g.PUT("/change-status/:id", r.ChangeItemStatus)
-}
-
-func (r *Routes) GetItems(c echo.Context) error {
-	//r.log.Info("Getting items from the database")
-
-	items, err := r.itemsService.GetItems()
-	if err != nil {
-		r.log.Errorf("Failed to get items from the database: %v", err)
-		return c.JSON(500, "Failed to get items from the database")
-	}
-
-	return c.JSON(200, items)
 }
 
 func (r *Routes) AddItem(c echo.Context) error {
@@ -54,23 +40,9 @@ func (r *Routes) AddItem(c echo.Context) error {
 		return c.JSON(500, "Failed to get items from the database")
 	}
 
-	t, err := r.View.GetTemplate("components/items-list.jet")
-	if err != nil {
-		r.log.Errorf("Failed to parse template: %v", err)
-		return c.JSON(http.StatusInternalServerError, "Failed to parse template")
-	}
+	itemsListComp := pages.ItemsList(items)
 
-	vars := make(jet.VarMap)
-	convertedItems := convertItemsToView(items)
-	vars.Set("items", convertedItems)
-
-	var buf bytes.Buffer
-	if err := t.Execute(&buf, vars, convertedItems); err != nil {
-		r.log.Errorf("Failed to execute template: %v", err)
-		return c.JSON(http.StatusInternalServerError, "Failed to execute template")
-	}
-
-	return c.HTMLBlob(http.StatusOK, buf.Bytes())
+	return Render(c, http.StatusOK, itemsListComp)
 }
 
 func (r *Routes) DeleteItem(c echo.Context) error {
@@ -118,12 +90,6 @@ func (r *Routes) ChangeItemStatus(c echo.Context) error {
 }
 
 func (r *Routes) ShowIndexPage(c echo.Context) error {
-	t, err := r.View.GetTemplate("index.jet")
-	if err != nil {
-		r.log.Errorf("Failed to get template: %v", err)
-		return c.JSON(http.StatusInternalServerError, "Failed to get template")
-	}
-	r.View.SetDevelopmentMode(true)
 
 	items, err := r.itemsService.GetItems()
 	if err != nil {
@@ -131,26 +97,6 @@ func (r *Routes) ShowIndexPage(c echo.Context) error {
 		return c.JSON(500, "Failed to get items from the database")
 	}
 
-	data := make(jet.VarMap)
-	data.Set("items", convertItemsToView(items))
-
-	var buf bytes.Buffer
-	if err := t.Execute(&buf, data, nil); err != nil {
-		r.log.Errorf("Failed to render index page: %v", err)
-		return c.JSON(500, "Failed to render index page")
-	}
-
-	return c.HTMLBlob(http.StatusOK, buf.Bytes())
-}
-
-func convertItemsToView(items []models.TodoItem) []TodoItemView {
-	var itemsView []TodoItemView
-	for _, item := range items {
-		itemsView = append(itemsView, TodoItemView{
-			Id:   item.Id,
-			Item: item.Item,
-			Done: *item.Done,
-		})
-	}
-	return itemsView
+	itemsListComp := pages.ItemsList(items)
+	return Render(c, http.StatusOK, pages.Home("fuck", itemsListComp))
 }
